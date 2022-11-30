@@ -1,0 +1,17 @@
+object DataModule1: TDataModule1
+  OldCreateOrder = False
+  Height = 405
+  Width = 547
+  object Conexao: TFDConnection
+    Params.Strings = (
+      'Database=C:\AtendTecnologia\Dados\BANCOLOJA.FDB'
+      'User_Name=SYSDBA'
+      'Password=masterkey'
+      'Port=3050'
+      'CharacterSet=WIN1252'
+      'DriverID=FB')
+    LoginPrompt = False
+    Left = 72
+    Top = 128
+  end
+end

@@ -1,0 +1,15 @@
+program APedidos;
+
+uses
+  Vcl.Forms,
+  uAcesso in '..\forms\uAcesso.pas' {FormLogin};
+
+{$R *.res}
+
+begin
+  Application.Initialize;
+  Application.MainFormOnTaskbar := True;
+  Application.Title := 'APedidos';
+  Application.CreateForm(TFormLogin, FormLogin);
+  Application.Run;
+end.

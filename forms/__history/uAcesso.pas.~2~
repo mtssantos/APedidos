@@ -1,0 +1,148 @@
+unit uAcesso;
+
+interface
+
+uses
+  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ExtCtrls, Vcl.StdCtrls, Vcl.DBCtrls,
+  Data.DB, Vcl.Mask, Vcl.Imaging.pngimage, Vcl.TitleBarCtrls, midaslib;
+
+type
+  TFormLogin = class(TForm)
+    pnl: TPanel;
+    Label1: TLabel;
+    Label2: TLabel;
+    edtSenha: TEdit;
+    dsLogin: TDataSource;
+    btn_entrar: TButton;
+    ComboboxVendedor: TDBComboBox;
+    Image1: TImage;
+    titlebarpanel: TTitleBarPanel;
+    Panel1: TPanel;
+    lbl_version: TLabel;
+    Panel2: TPanel;
+    procedure FormShow(Sender: TObject);
+    procedure FormKeyPress(Sender: TObject; var Key: Char);
+    procedure btn_entrarClick(Sender: TObject);
+    procedure FormCreate(Sender: TObject);
+  private
+    { Private declarations }
+    procedure RealizarLogin;
+  public
+    { Public declarations }
+    procedure PuxarUser;
+  end;
+
+var
+  FormLogin: TFormLogin;
+
+implementation
+
+{$R *.dfm}
+
+uses uDados, uFormPrincipal;
+
+{ TFormLogin }
+
+
+
+function FileVersion(const FileName: TFileName): String;
+var
+  VerInfoSize: Cardinal;
+  VerValueSize: Cardinal;
+  Dummy: Cardinal;
+  PVerInfo: Pointer;
+  PVerValue: PVSFixedFileInfo;
+begin
+  Result := '';
+  VerInfoSize := GetFileVersionInfoSize(PChar(FileName), Dummy);
+  GetMem(PVerInfo, VerInfoSize);
+  try
+    if GetFileVersionInfo(PChar(FileName), 0, VerInfoSize, PVerInfo) then
+      if VerQueryValue(PVerInfo, '\', Pointer(PVerValue), VerValueSize) then
+        with PVerValue^ do
+          Result := Format('v%d.%d.%d.%d', [
+            HiWord(dwFileVersionMS), //Major
+            LoWord(dwFileVersionMS), //Minor
+            HiWord(dwFileVersionLS), //Release
+            LoWord(dwFileVersionLS)]); //Build
+  finally
+    FreeMem(PVerInfo, VerInfoSize);
+  end;
+end;
+
+procedure TFormLogin.PuxarUser;
+begin
+
+end;
+
+
+procedure TFormLogin.RealizarLogin;
+var
+  user, senha: string;
+  index: Integer;
+begin
+  user := ComboboxVendedor.Text;
+  index := ComboboxVendedor.ItemIndex;
+  senha := edtSenha.Text;
+
+  with Dados.qryExecute do
+  begin
+    SQL.Clear;
+    SQL.Add('SELECT * FROM CADASTROVENDEDOR');
+    SQL.Add(' WHERE NOMEVENDEDOR = :VENDEDOR AND SENHAVENDEDOR = :SENHA AND STATUSVENDEDOR = ''1''');
+    ParamByName('VENDEDOR').AsString := user;
+    ParamByName('SENHA').AsString := senha;
+    Open();
+    if RecordCount > 0 then
+    begin
+      FormPrincipal := TFormPrincipal.Create(Self);
+      try
+        FormPrincipal.nomevendedor := ComboboxVendedor.Text;
+        FormPrincipal.codvendedor := Dados.qryExecute.FieldByName('CODIGOVENDEDOR').AsString;
+        FormPrincipal.ShowModal;
+        edtSenha.Clear;
+        ComboboxVendedor.SetFocus;
+        ComboboxVendedor.ItemIndex := 0;
+      finally
+        FreeAndNil(FormPrincipal);
+      end;
+    end
+    else
+    begin
+      ShowMessage('Usuário ou senha inválidos!');
+      ComboboxVendedor.ItemIndex := index;
+      edtSenha.Clear;
+      edtSenha.SetFocus;
+    end;
+  end;
+
+end;
+
+
+
+procedure TFormLogin.FormCreate(Sender: TObject);
+begin
+  lbl_version.Caption := 'Versão: ' + FileVersion(Application.ExeName);
+end;
+
+procedure TFormLogin.FormKeyPress(Sender: TObject; var Key: Char);
+begin
+  if (Key = #13) then
+  begin
+    Key := #0;
+    Perform(Wm_NextDlgCtl,0,0);
+  end;
+end;
+
+procedure TFormLogin.FormShow(Sender: TObject);
+begin
+  PuxarUser;
+end;
+
+procedure TFormLogin.btn_entrarClick(Sender: TObject);
+begin
+ RealizarLogin;
+end;
+
+end.
